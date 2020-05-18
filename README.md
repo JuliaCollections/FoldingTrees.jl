@@ -12,7 +12,7 @@ For example, after saying `using FoldingTrees`, a "table of contents" like
         1. Stuff you should have learned in high school
         2. Stuff even Einstein didn't know
       B. Defining the problem
-   II. How to solve it
+    II. How to solve it
 
 could be created like this:
 
