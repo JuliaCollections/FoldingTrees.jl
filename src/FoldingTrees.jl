@@ -1,6 +1,8 @@
 module FoldingTrees
 
-export Node, isroot, count_open_leaves, next, prev
+using AbstractTrees
+
+export Node, toggle!, fold!, unfold!, isroot, count_open_leaves, next, prev, nodes
 
 mutable struct Node{Data}
     data::Data
@@ -38,7 +40,33 @@ Node(data, parent::Node{Data}, foldchildren::Bool=false) where Data = Node{Data}
 Base.eltype(::Type{Node{Data}}) where Data = Data
 Base.IteratorSize(::Type{<:Node}) = Base.SizeUnknown()
 
+"""
+    isroot(node)
+
+Return `true` if `node` is the root node (meaning, it has no parent).
+"""
 isroot(node::Node) = !isdefined(node, :parent)
+
+"""
+    toggle!(node)
+
+Change the folding state of `node`. See also [`fold!`](@ref) and [`unfold!`](@ref).
+"""
+toggle!(node::Node) = (node.foldchildren = !node.foldchildren)
+
+"""
+    fold!(node)
+
+Fold the children of `node`. See also [`unfold!`](@ref) and [`toggle!`](@ref).
+"""
+fold!(node::Node) = node.foldchildren = true
+
+"""
+    unfold!(node)
+
+Unfold the children of `node`. See also [`fold!`](@ref) and [`toggle!`](@ref).
+"""
+unfold!(node::Node) = node.foldchildren = false
 
 """
     count_open_leaves(node)
@@ -123,5 +151,49 @@ function Base.iterate(root::Node, state)
     node.lastbranch = p.lastbranch && node == p.children[end]
     return node.data, (node, depth)
 end
+
+struct NodeWrapper{N}
+    node::N
+end
+
+function Base.iterate(rootw::NodeWrapper)
+    root = rootw.node
+    root.lastbranch = true   # root has no ancestors so it is last by definition
+    return root, (root, 0)
+end
+
+function Base.iterate(rootw::NodeWrapper, state)
+    node, depth = state
+    lb = node.lastbranch
+    thislb = node.foldchildren | isempty(node.children)
+    (lb & thislb) && return nothing
+    # We can use `next` safely because parents are visited before children,
+    # so `lastbranch` is guaranteed to be set properly.
+    node, depth = next(node, depth)
+    p = node.parent
+    node.lastbranch = p.lastbranch && node == p.children[end]
+    return node, (node, depth)
+end
+
+"""
+    itr = nodes(node)
+
+Create an iterator `itr` that will return the nodes, rather than the node data.
+
+# Example
+
+```julia
+julia> foreach(unfold!, nodes(root))
+```
+
+would ensure that each node in the tree is unfolded.
+"""
+nodes(node::Node) = NodeWrapper(node)
+
+## AbstractTrees interface
+
+AbstractTrees.children(node::Node) = node.foldchildren ? typeof(node)[] : node.children
+
+AbstractTrees.printnode(io::IO, node::Node) = print(io, node.foldchildren ? "+ " : "  ", node.data)
 
 end # module

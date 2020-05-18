@@ -112,4 +112,13 @@ end
     @test collect(child3) == lines[8:end]
     checknext(root, 0, lines, depths)
     checkprev(child3c, 2, lines, depths)
+
+    io = IOBuffer()
+    foreach(unfold!, nodes(root))
+    FoldingTrees.print_tree(io, root)
+    @test String(take!(io)) == "  \n├─   1\n│  ├─   1a\n│  │  └─   1a1\n│  └─   1b\n│     ├─   1b1\n│     └─   1b2\n├─   2\n└─   3\n   ├─   3a\n   ├─   3b\n   │  └─   3b1\n   └─   3c\n"
+    fold!(child1b)
+    FoldingTrees.print_tree(io, root)
+    @test String(take!(io)) == "  \n├─   1\n│  ├─   1a\n│  │  └─   1a1\n│  └─ + 1b\n├─   2\n└─   3\n   ├─   3a\n   ├─   3b\n   │  └─   3b1\n   └─   3c\n"
+    @test !toggle!(child1b)
 end
