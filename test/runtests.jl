@@ -1,4 +1,5 @@
 using FoldingTrees
+using REPL.TerminalMenus
 using Test
 
 function collectexposed(root)
@@ -39,6 +40,25 @@ function checkprev(node, depth, lines, depths)
         node, depth = prev(node, depth)
     end
 end
+
+# From REPL/test/TerminalMenus/dynamic_menu.jl
+matchback(str) = match(r"\e\[(\d+)A", str)
+
+function linesplitter(str)
+    strs = split(str, '\n')
+    s1 = strs[1]
+    m = matchback(s1)
+    if m === nothing
+        nback, startidx = 0, 1
+    else
+        nback = parse(Int, m.captures[1])
+        startidx = m.offset+length(m.match)
+    end
+    strs[1] = s1[startidx:end]  # discard the portion that moves the terminal
+    @test all(s->startswith(s, "\e[2K"), strs)
+    return nback, replace.(map(s->s[5:end], strs), ('\r'=>"",))
+end
+
 
 @testset "FoldingTrees.jl" begin
     root = Node("")
@@ -121,4 +141,75 @@ end
     FoldingTrees.print_tree(io, root)
     @test String(take!(io)) == "  \n├─   1\n│  ├─   1a\n│  │  └─   1a1\n│  └─ + 1b\n├─   2\n└─   3\n   ├─   3a\n   ├─   3b\n   │  └─   3b1\n   └─   3c\n"
     @test !toggle!(child1b)
+end
+
+if isdefined(FoldingTrees, :TreeMenu)
+    @testset "TreeMenu" begin
+        @testset "writeoption" begin
+            buf = IOBuffer()
+            str = "abcdefg"
+            FoldingTrees.writeoption(buf, str, 0; width=10)
+            @test String(take!(buf)) == str
+            FoldingTrees.writeoption(buf, str, 0; width=3)
+            @test String(take!(buf)) == "abc"
+            FoldingTrees.writeoption(buf, str, 5; width=10)
+            @test String(take!(buf)) == "abcde"
+            FoldingTrees.writeoption(buf, "Once\n upon\n a time", 0; width=100)
+            @test String(take!(buf)) == "Once upon a time"
+            FoldingTrees.writeoption(buf, "Once\r\n upon\r\n a time", 0; width=100)
+            @test String(take!(buf)) == "Once upon a time"
+            printstyled(IOContext(buf, :color=>true), "This is a long string", color=:red)
+            str = String(take!(buf))
+            FoldingTrees.writeoption(buf, str, 0; width=100)
+            @test String(take!(buf)) == str
+            FoldingTrees.writeoption(buf, str, 0; width=10)
+            @test String(take!(buf)) == "\e[31mThis is a \e[39m"
+            @test_throws ErrorException("terminal escape code \\ex not supported") FoldingTrees.writeoption(buf, "This is \ex junk", 0; width=10)
+            @test_throws ErrorException("terminal escape code \\e[x not supported") FoldingTrees.writeoption(buf, "This is \e[x junk", 0; width=10)
+
+            # Fallback for writeoption
+            take!(buf)
+            FoldingTrees.writeoption(buf, 3.2, 0; width=10)
+            @test String(take!(buf)) == "3.2"
+        end
+
+        root = Node("")
+        child1 = Node("1", root)
+        child1a = Node("1a", child1)
+        child1a1 = Node("1a1", child1a)
+        child1b = Node("1b", child1)
+        child1b1 = Node("1b1", child1b)
+        child1b2 = Node("1b2", child1b)
+        child2 = Node("2", root)
+        menu = TreeMenu(root)
+        @test TerminalMenus.numoptions(menu) == 8
+        io = IOBuffer()
+        state = TerminalMenus.printmenu(io, menu, 2; init=true)
+        str = String(take!(io))
+        nback, lines = linesplitter(str)
+        @test nback == 0
+        @test lines[2] == " >    1"
+        @test lines[3] == "       1a"
+        @test lines[4] == "        1a1"
+        @test lines[8] == "      2"
+        @test length(lines) == 8
+
+        menu.cursoridx = 3
+        TerminalMenus.keypress(menu, UInt32(' '))
+        @test TerminalMenus.numoptions(menu) == 7
+        state = TerminalMenus.printmenu(io, menu, 2; oldstate=state)
+        str = String(take!(io))
+        nback, lines = linesplitter(str)
+        @test nback == 7
+        @test lines[2] == " >    1"
+        @test lines[3] == "   +   1a"
+        @test lines[4] == "       1b"
+        @test lines[8] == "\e[1A"   # ANSI escape code for "move up"
+        @test length(lines) == 8
+
+        TerminalMenus.pick(menu, 4)
+        @test TerminalMenus.selected(menu) == child1b
+        TerminalMenus.cancel(menu)
+        @test TerminalMenus.selected(menu) === nothing
+    end
 end
