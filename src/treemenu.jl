@@ -31,7 +31,7 @@ Given a tree built from `Node{Data}`, packages implementing a `TreeMenu` may nee
 The implementation for `data::AbstractString` is careful to ensure that the option does not wrap to a new
 line of the terminal, and to ensure that any color printing is turned off even when the line has to be truncated.
 """
-function writeoption(buf::IO, str::AbstractString, charsused::Int; width::Int=displaysize(stdout)[2])
+function writeoption(buf::IO, str::AbstractString, charsused::Int; width::Int=(displaysize(stdout)::Tuple{Int,Int})[2])
     function print_escape_code(buf, str, idx)
         idxe = nextind(str, idx)
         c = str[idxe]
