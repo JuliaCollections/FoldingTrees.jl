@@ -86,20 +86,19 @@ Return the next node in a depth-first search.
 The parent is visited before any children.
 """
 function next(node, depth::Int=0)
-    function upnext(node, depth)
-        # node.parent must be defined if we're calling this
-        p = node.parent
-        myidx = findfirst((==)(node), p.children)
-        if myidx < length(p.children)
-            return p.children[myidx+1], depth
-        end
-        return upnext(p, depth-1)
-    end
-
     if !node.foldchildren && !isempty(node.children)
         return first(node.children), depth+1
     end
     return upnext(node, depth)
+end
+function upnext(node, depth)
+    # node.parent must be defined if we're calling this
+    p = node.parent
+    myidx = findfirst((==)(node), p.children)
+    if myidx < length(p.children)
+        return p.children[myidx+1], depth
+    end
+    return upnext(p, depth-1)
 end
 
 """
@@ -112,19 +111,18 @@ This traverses in the opposite direction as [`next`](@ref),
 so last, deepest children are visited before their parents.
 """
 function prev(node, depth::Int=0)
-    function lastchild(node, depth)
-        if node.foldchildren || isempty(node.children)
-            return node, depth
-        end
-        return lastchild(node.children[end], depth+1)
-    end
-
     p = node.parent
     myidx = findfirst((==)(node), p.children)
     if myidx > 1
         return lastchild(p.children[myidx-1], depth)
     end
     return p, depth-1
+end
+function lastchild(node, depth)
+    if node.foldchildren || isempty(node.children)
+        return node, depth
+    end
+    return lastchild(node.children[end], depth+1)
 end
 
 # During iteration, we mark each node as to whether it's on the terminal branch of all ancestors.

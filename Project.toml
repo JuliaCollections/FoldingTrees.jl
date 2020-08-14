@@ -1,7 +1,7 @@
 name = "FoldingTrees"
 uuid = "1eca21be-9b9b-4ed8-839a-6d8ae26b1781"
 authors = ["Tim Holy <tim.holy@gmail.com>"]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
