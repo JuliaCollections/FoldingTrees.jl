@@ -11,12 +11,14 @@ mutable struct TreeMenu{N<:Node} <: TerminalMenus._ConfiguredMenu{TerminalMenus.
     chosen::Bool   # when true, indicates that `current` was chosen by user
     # Needed by REPL.TerminalMenus
     pagesize::Int
+    dynamic::Bool
+    maxsize::Int
     pageoffset::Int
     config::TerminalMenus.Config
 end
-function TreeMenu(root; pagesize::Int=10, kwargs...)
+function TreeMenu(root; pagesize::Int=10, dynamic = false, maxsize = pagesize, kwargs...)
     pagesize = min(pagesize, count_open_leaves(root))
-    return TreeMenu(root, root, 1, 1, 1, false, pagesize, 0, TerminalMenus.Config(kwargs...))
+    return TreeMenu(root, root, 1, 1, 1, false, pagesize, dynamic, maxsize, 0, TerminalMenus.Config(kwargs...))
 end
 
 """
@@ -116,6 +118,9 @@ function TerminalMenus.keypress(menu::TreeMenu, i::UInt32)
     if i == Int(' ')
         node = setcurrent!(menu, menu.cursoridx)
         node.foldchildren = !node.foldchildren
+        if menu.dynamic
+            menu.pagesize = min(menu.maxsize, count_open_leaves(menu.root))
+        end
     end
     return false
 end
