@@ -211,5 +211,60 @@ if isdefined(FoldingTrees, :TreeMenu)
         @test TerminalMenus.selected(menu) == child1b
         TerminalMenus.cancel(menu)
         @test TerminalMenus.selected(menu) === nothing
+
+        # Dynamic `pagesize` when (un)folding:
+        foreach(unfold!, nodes(root))
+
+        menu = TreeMenu(root; dynamic = true)
+        state = TerminalMenus.printmenu(io, menu, 2; init = true)
+        str = String(take!(io))
+        nback, lines = linesplitter(str)
+        @test nback == 0
+        @test length(lines) == 8
+        @test lines[2] == " >    1"
+        @test menu.pagesize == 8
+
+        # pagesize shrink
+        TerminalMenus.keypress(menu, UInt32(' '))
+        state = TerminalMenus.printmenu(io, menu, 2; init = true)
+        str = String(take!(io))
+        nback, lines = linesplitter(str)
+        @test length(lines) == 3
+        @test lines[2] == " > +  1"
+        @test lines[3] == "      2"
+        @test menu.pagesize == 3
+
+        # pagesize regrow
+        TerminalMenus.keypress(menu, UInt32(' '))
+        state = TerminalMenus.printmenu(io, menu, 2; init = true)
+        str = String(take!(io))
+        nback, lines = linesplitter(str)
+        @test length(lines) == 8
+        @test lines[2] == " >    1"
+        @test menu.pagesize == 8
+
+        # Fold that the for the pagesize limiting tests next:
+        TerminalMenus.keypress(menu, UInt32(' '))
+
+        # `maxsize` limiting when unfolding:
+
+        menu = TreeMenu(root; dynamic = true, maxsize = 5)
+        state = TerminalMenus.printmenu(io, menu, 2; init = true)
+        str = String(take!(io))
+        nback, lines = linesplitter(str)
+        @test nback == 0
+        @test length(lines) == 3
+        @test lines[2] == " > +  1"
+        @test lines[3] == "      2"
+        @test menu.pagesize == 3
+
+        TerminalMenus.keypress(menu, UInt32(' '))
+        state = TerminalMenus.printmenu(io, menu, 2; init = true)
+        str = String(take!(io))
+        nback, lines = linesplitter(str)
+        @test nback == 0
+        @test length(lines) == 5
+        @test lines[5] == "v      1b"
+        @test menu.pagesize == 5
     end
 end
