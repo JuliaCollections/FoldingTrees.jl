@@ -14,11 +14,12 @@ mutable struct TreeMenu{N<:Node} <: TerminalMenus._ConfiguredMenu{TerminalMenus.
     dynamic::Bool
     maxsize::Int
     pageoffset::Int
+    keypress::Any
     config::TerminalMenus.Config
 end
-function TreeMenu(root; pagesize::Int=10, dynamic = false, maxsize = pagesize, kwargs...)
+function TreeMenu(root; pagesize::Int=10, dynamic = false, maxsize = pagesize, keypress = (m,i) -> false, kwargs...)
     pagesize = min(pagesize, count_open_leaves(root))
-    return TreeMenu(root, root, 1, 1, 1, false, pagesize, dynamic, maxsize, 0, TerminalMenus.Config(kwargs...))
+    return TreeMenu(root, root, 1, 1, 1, false, pagesize, dynamic, maxsize, 0, keypress, TerminalMenus.Config(kwargs...))
 end
 
 """
@@ -122,7 +123,7 @@ function TerminalMenus.keypress(menu::TreeMenu, i::UInt32)
             menu.pagesize = min(menu.maxsize, count_open_leaves(menu.root))
         end
     end
-    return false
+    return menu.keypress(menu, i)
 end
 
 function TerminalMenus.selected(menu::TreeMenu)

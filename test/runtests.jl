@@ -266,5 +266,22 @@ if isdefined(FoldingTrees, :TreeMenu)
         @test length(lines) == 5
         @test lines[5] == "v      1b"
         @test menu.pagesize == 5
+
+        # Test keypress
+        testint = 1
+        function keypress(menu::TreeMenu, i::UInt32)
+            if i == Int('+')
+                testint += 1
+            elseif i == Int('-')
+                testint -= 1
+            end
+            return false
+        end
+        menu2 = TreeMenu(root, keypress = keypress)
+        TerminalMenus.keypress(menu2, UInt32('+'))
+        @test testint == 2
+        TerminalMenus.keypress(menu2, UInt32('-'))
+        @test testint == 1
+
     end
 end
