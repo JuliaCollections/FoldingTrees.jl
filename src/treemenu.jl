@@ -2,6 +2,18 @@
 
 export TreeMenu
 
+"""
+    TreeMenu(root; pagesize::Int=10, dynamic = false, maxsize = pagesize, keypress = (m,i) -> false, kwargs...)
+
+Use `root` to create an interactive menu using TerminalMenus. `pagesize` is the number of lines to use for a page.
+If `dynamic`, adjust the page size based on the expansion of the content. `maxsize` is the maximum size of the page.
+
+Provide a function `keypress` to respond to keys while the menu is shown. The function has two arguments, `m::TreeMenu`
+and `i::UInt32`. The integer `i` is the key pressed. This function should return `true` if the menu should exit and
+`false` otherwise.
+
+`kwargs` are passed to `TerminalMenus.Config`.
+"""
 mutable struct TreeMenu{N<:Node} <: TerminalMenus._ConfiguredMenu{TerminalMenus.Config}
     root::N
     current::N
@@ -14,11 +26,12 @@ mutable struct TreeMenu{N<:Node} <: TerminalMenus._ConfiguredMenu{TerminalMenus.
     dynamic::Bool
     maxsize::Int
     pageoffset::Int
+    keypress::Any
     config::TerminalMenus.Config
 end
-function TreeMenu(root; pagesize::Int=10, dynamic = false, maxsize = pagesize, kwargs...)
+function TreeMenu(root; pagesize::Int=10, dynamic = false, maxsize = pagesize, keypress = (m,i) -> false, kwargs...)
     pagesize = min(pagesize, count_open_leaves(root))
-    return TreeMenu(root, root, 1, 1, 1, false, pagesize, dynamic, maxsize, 0, TerminalMenus.Config(kwargs...))
+    return TreeMenu(root, root, 1, 1, 1, false, pagesize, dynamic, maxsize, 0, keypress, TerminalMenus.Config(kwargs...))
 end
 
 """
@@ -122,7 +135,7 @@ function TerminalMenus.keypress(menu::TreeMenu, i::UInt32)
             menu.pagesize = min(menu.maxsize, count_open_leaves(menu.root))
         end
     end
-    return false
+    return menu.keypress(menu, i)
 end
 
 function TerminalMenus.selected(menu::TreeMenu)

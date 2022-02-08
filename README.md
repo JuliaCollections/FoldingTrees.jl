@@ -114,6 +114,9 @@ One can create very large menus with thousands of options, in which case the men
 and `PgUp`/`PgDn`.
 As described in the `TerminalMenus` documentation, you can customize aspects of the menu's appearance,
 such as the number of items visible simultaneously and the characters used to indicate scrolling and the cursor position.
+`TreeMenu` includes optional keyword arguments `pagesize`, `dynamic`, `maxsize`, and `keypress` to control
+various aspects of the interactive menu. See the docstring for `TreeMenu` for more information.
 
 For `Node` objects where `data` is not an `AbstractString`, you will most likely want to specialize `FoldingTrees.writeoption` for your type.
 See `?FoldingTrees.writeoption` for details.
+
