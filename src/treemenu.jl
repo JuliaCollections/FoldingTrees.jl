@@ -122,7 +122,7 @@ function TerminalMenus.writeline(buf::IOBuffer, menu::TreeMenu, idx::Int, cursor
     if cursor
         menu.cursoridx = idx
     end
-    node.foldchildren ? print(buf, "+") : print(buf, " ")
+    node.foldchildren && !isempty(node.children) ? print(buf, "+") : print(buf, " ")
     print(buf, " "^menu.currentdepth)
     writeoption(buf, node.data, menu.currentdepth+4)
 end
