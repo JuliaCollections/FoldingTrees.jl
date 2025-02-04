@@ -1,7 +1,6 @@
 # FoldingTrees
 
-[![Build Status](https://travis-ci.com/JuliaCollections/FoldingTrees.jl.svg?branch=master)](https://travis-ci.com/JuliaCollections/FoldingTrees.jl)
-[![Codecov](https://codecov.io/gh/JuliaCollections/FoldingTrees.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaCollections/FoldingTrees.jl)
+ [![Codecov](https://codecov.io/gh/JuliaCollections/FoldingTrees.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaCollections/FoldingTrees.jl)
 
 FoldingTrees implements a dynamic [tree structure](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) in which some nodes may be "folded," i.e., marked to avoid descent among that node's children.
 It also supports interactive text menus based on folding trees.
