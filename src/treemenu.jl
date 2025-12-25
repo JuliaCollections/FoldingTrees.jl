@@ -117,7 +117,7 @@ TerminalMenus.cancel(menu::TreeMenu) = menu.chosen = false
 
 TerminalMenus.numoptions(menu::TreeMenu) = count_open_leaves(menu.root)
 
-function TerminalMenus.writeline(buf::IOBuffer, menu::TreeMenu, idx::Int, cursor::Bool)
+function TerminalMenus.writeline(buf::IO, menu::TreeMenu, idx::Int, cursor::Bool)
     node = setcurrent!(menu, idx)
     if cursor
         menu.cursoridx = idx
