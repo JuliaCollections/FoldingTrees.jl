@@ -128,8 +128,8 @@ function TerminalMenus.writeline(buf::IOBuffer, menu::TreeMenu, idx::Int, cursor
 end
 
 function TerminalMenus.keypress(menu::TreeMenu, i::UInt32)
+    node = setcurrent!(menu, menu.cursoridx)
     if i == Int(' ')
-        node = setcurrent!(menu, menu.cursoridx)
         node.foldchildren = !node.foldchildren
         if menu.dynamic
             menu.pagesize = min(menu.maxsize, count_open_leaves(menu.root))
